@@ -5,18 +5,25 @@
       <a-button type="primary">绘制矩形</a-button>
       <a-button type="primary">绘制多边形</a-button>
     </div>
+    <div class="data-info">
+      <p>当前所在行政区信息</p>
+      <vue-json-pretty :data="dataInfo" :highlightMouseoverNode ="true"></vue-json-pretty>
+    </div>
     <div id="map-container"></div>
   </div>
 </template>
 
 <script>
 import AMapLoader from '@amap/amap-jsapi-loader'
+import VueJsonPretty from 'vue-json-pretty'
+import 'vue-json-pretty/lib/styles.css'
 
 window._AMapSecurityConfig = {
   securityJsCode: 'eceded719ab73aba9455d1a2fdb4a008'
 } 
 export default {
   name: 'HelloWorld',
+  components: { VueJsonPretty },
   props: {
     msg: String
   },
@@ -24,7 +31,8 @@ export default {
     return {
       map: null,
       AMap: null,
-      spinning: false
+      spinning: false,
+      dataInfo: null
     }
   },
   mounted() {
@@ -35,12 +43,11 @@ export default {
   methods: {
     initMap() {
       return new Promise((resolve, reject) => {
-        console.log('11111111111111111111')
-      AMapLoader.load({
-        key: '13cd07438f4a833b2156faeacb78e5ec',
-        version: '1.4.15',
-        plugins: ['AMap.MarkerClusterer', 'AMap.ToolBar']
-      }).then((AMap) => {
+        AMapLoader.load({
+          key: '13cd07438f4a833b2156faeacb78e5ec',
+          version: '1.4.15',
+          plugins: ['AMap.MarkerClusterer', 'AMap.ToolBar', 'AMap.ControlBar']
+        }).then((AMap) => {
           // 初始化3D地图并设置中心点坐标和地图级别
           this.map = new AMap.Map('map-container', {
             viewMode: '3D',
@@ -61,11 +68,31 @@ export default {
               }),
             ]
           })
-          this.map.addControl(new AMap.ToolBar())
-
+          const toolBar = new AMap.ToolBar({
+            visible: false,
+            position: {
+              top: '110px',
+              right: '40px'
+            }
+          })
+          const controlBar = new AMap.ControlBar({
+            visible: false,
+            position: {
+              top: '10px',
+              right: '10px'
+            }
+          })
+          this.map.addControl(toolBar)
+          this.map.addControl(controlBar)
+        
           this.map.on('complete', () => {
             // 地图图块加载完成后触发
             this.spinning = false
+            this.logMapInfo()
+          })
+          this.map.on('moveend', () => {
+            // 地图图块加载完成后触发
+            this.logMapInfo()
           })
           resolve(AMap)
         })
@@ -74,6 +101,12 @@ export default {
           reject(e)
         })
       })
+    },
+    //获取并展示当前城市信息
+    logMapInfo(){
+      this.map.getCity((info) => {
+        this.dataInfo = info
+      });
     }
   }
 }
@@ -94,6 +127,17 @@ export default {
     .ant-btn:not(:last-child) {
       border-right-color: #eee;
     }
+  }
+  .data-info {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    top: 20px;
+    left: 20px;
+    z-index: 999;
+    background-color: #fff;
+    padding: 10px;
+    // text-align: center;
   }
   #map-container {
     width: 1920px;
