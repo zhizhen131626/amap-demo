@@ -1,5 +1,10 @@
 <template>
-  <div>
+  <div class="map-page">
+    <div class="map-btn">
+      <a-button type="primary">绘制圆形</a-button>
+      <a-button type="primary">绘制矩形</a-button>
+      <a-button type="primary">绘制多边形</a-button>
+    </div>
     <div id="map-container"></div>
   </div>
 </template>
@@ -9,7 +14,7 @@ import AMapLoader from '@amap/amap-jsapi-loader'
 
 window._AMapSecurityConfig = {
   securityJsCode: 'eceded719ab73aba9455d1a2fdb4a008'
-}
+} 
 export default {
   name: 'HelloWorld',
   props: {
@@ -34,7 +39,7 @@ export default {
       AMapLoader.load({
         key: '13cd07438f4a833b2156faeacb78e5ec',
         version: '1.4.15',
-        plugins: ['AMap.MarkerClusterer']
+        plugins: ['AMap.MarkerClusterer', 'AMap.ToolBar']
       }).then((AMap) => {
           // 初始化3D地图并设置中心点坐标和地图级别
           this.map = new AMap.Map('map-container', {
@@ -53,9 +58,10 @@ export default {
                 zooms: [3, 18],
                 zIndex: 10,
                 heightFactor: 2
-              })
+              }),
             ]
           })
+          this.map.addControl(new AMap.ToolBar())
 
           this.map.on('complete', () => {
             // 地图图块加载完成后触发
@@ -73,9 +79,25 @@ export default {
 }
 </script>
 
-<style scoped>
-#map-container {
-  width: 1920px;
-  height: 100vh;
+<style lang="less" scoped>
+.map-page {
+  position: relative;
+  .map-btn {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translate(-50%, 0);
+    z-index: 999;
+    .ant-btn {
+      border-radius: 0;
+    }
+    .ant-btn:not(:last-child) {
+      border-right-color: #eee;
+    }
+  }
+  #map-container {
+    width: 1920px;
+    height: 100vh;
+  }
 }
 </style>
