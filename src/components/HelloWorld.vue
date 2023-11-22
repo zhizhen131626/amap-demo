@@ -55,7 +55,8 @@ export default {
         { value: 'blue', label: '靛青蓝' },
         { value: 'darkblue', label: '极夜蓝' },
         { value: 'wine', label: '酱籽' },
-      ]
+      ],
+      marker: null
     }
   },
   mounted() {
@@ -88,6 +89,7 @@ export default {
               new AMap.TileLayer(), // 高德默认标准图层
               // new AMap.TileLayer.Satellite(), // 卫星图层
               // new AMap.TileLayer.RoadNet(), // 路网图层
+              // new AMap.TileLayer.Traffic(), // 实时路况图层
               // 楼块图层
               new AMap.Buildings({
                 zooms: [3, 18],
@@ -110,10 +112,14 @@ export default {
               right: '10px'
             }
           })
+          this.marker = new AMap.Marker({
+            icon: 'https://webapi.amap.com/theme/v1.3/markers/n/mark_b.png',
+            position: [113.072972, 28.222085],
+            draggable: true
+          })
           this.map.addControl(toolBar)
           this.map.addControl(controlBar)
-
-          // this.handlePoly()
+          this.map.add(this.marker)
         
           this.map.on('complete', () => {
             // 地图图块加载完成后触发
@@ -121,12 +127,10 @@ export default {
             this.logMapInfo()
             // this.map.setCity('北京市') // 设置地图当前行政区
           })
-          this.map.on('moveend', () => {
-            // 地图图块加载完成后触发
-            this.logMapInfo()
+          this.map.on('moveend', (e) => {
+            this.logMapInfo(e)
           })
           this.map.on('click', (e) => {
-            // 地图图块加载完成后触发
             this.handleMapClick(e)
           })
           resolve(AMap)
@@ -138,7 +142,10 @@ export default {
       })
     },
     //获取并展示当前城市信息
-    logMapInfo(){
+    logMapInfo(e){
+      const center = this.map.getCenter() // 获取当前地图级别
+      const { lat, lng } = center
+      console.log('moveend===========', e, lat, lng)
       this.map.getCity((info) => {
         this.dataInfo = info
       });
@@ -147,6 +154,31 @@ export default {
     handleMapClick(e) {
       const { lat, lng } = e.lnglat
       console.log('e-lat-lng=============', lat, lng)
+      if (this.marker) {
+        this.map.remove(this.marker)
+      }
+      this.marker = new this.AMap.Marker({
+        icon: 'https://webapi.amap.com/theme/v1.3/markers/n/mark_b.png',
+        position: [lng, lat],
+        draggable: true
+      })
+      this.map.add(this.marker)
+      this.marker.on('click', (e) => {
+        this.handleInfoWindow(e)
+      })
+      this.logMapInfo(e)
+    },
+    handleInfoWindow(e) {
+      console.log(e)
+      const { lat, lng } = e.lnglat
+      const infoWindow = new this.AMap.InfoWindow({
+        content: `
+          <div>经度: ${lng}</div>
+          <div>纬度: ${lat}</div>
+        `
+      })
+      infoWindow.on('open')
+      infoWindow.open()
     },
     // 设置样式主题
     handleSelectStyle(value) {
